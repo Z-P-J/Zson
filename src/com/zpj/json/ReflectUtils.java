@@ -35,6 +35,18 @@ public final class ReflectUtils {
         throw new UnsupportedOperationException();
     }
 
+    public static String getSerializeName(Field field) {
+        String name = null;
+        Serialize serializeAnnotation = field.getAnnotation(Serialize.class);
+        if (serializeAnnotation != null) {
+            name = serializeAnnotation.name();
+        }
+        if (name == null || name.isEmpty()) {
+            name = field.getName();
+        }
+        return name;
+    }
+
     /**
      * Returns a new parameterized type, applying {@code typeArguments} to
      * {@code rawType} and enclosed by {@code ownerType}.

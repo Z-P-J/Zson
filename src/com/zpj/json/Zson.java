@@ -297,15 +297,7 @@ public final class Zson {
                         if (!field.isAccessible()) {
                             field.setAccessible(true);
                         }
-                        String selector = null;
-                        Serialize serializeAnnotation = field.getAnnotation(Serialize.class);
-                        if (serializeAnnotation != null) {
-                            selector = serializeAnnotation.name();
-                        }
-                        if (selector == null || selector.isEmpty()) {
-                            selector = field.getName();
-                        }
-                        fieldMap.put(selector, new FieldWrapper(field, token));
+                        fieldMap.put(ReflectUtils.getSerializeName(field), new FieldWrapper(field, token));
                     }
                     token = TypeToken.get(raw.getGenericSuperclass());
                     raw = token.getRawType();
@@ -367,7 +359,6 @@ public final class Zson {
                     builder.append(':');
                     valueAdapter.write(builder, null, map.get(key), valueTypeToken);
                 }
-
             } else {
                 while (raw != Object.class) {
                     for (Field field : raw.getDeclaredFields()) {
@@ -377,17 +368,9 @@ public final class Zson {
                         if (!field.isAccessible()) {
                             field.setAccessible(true);
                         }
-                        String selector = null;
-                        Serialize serializeAnnotation = field.getAnnotation(Serialize.class);
-                        if (serializeAnnotation != null) {
-                            selector = serializeAnnotation.name();
-                        }
-                        if (selector == null || selector.isEmpty()) {
-                            selector = field.getName();
-                        }
                         TypeToken<?> tt = TypeToken.get(ReflectUtils.resolve(token.getType(), raw, field.getGenericType()));
                         Adapter adapter = getAdapter(tt);
-                        adapter.write(builder, selector, field.get(obj), tt);
+                        adapter.write(builder, ReflectUtils.getSerializeName(field), field.get(obj), tt);
                     }
 
                     token = TypeToken.get(raw.getGenericSuperclass());
@@ -541,11 +524,26 @@ public final class Zson {
 
         @Override
         public boolean is(TypeToken<?> token) {
-            return token.getRawType() == String.class;
+            return token.getRawType() == String.class || token.getRawType().isEnum();
         }
 
         @Override
         public Object read(JsonReader reader, String value, Object obj, TypeToken<?> token) throws Exception {
+            if (token.getRawType().isEnum()) {
+                if (value != null) {
+                    for (Field field : token.getRawType().getDeclaredFields()) {
+                        if (field.isEnumConstant()) {
+                            if (!field.isAccessible()) {
+                                field.setAccessible(true);
+                            }
+                            if (value.equals(ReflectUtils.getSerializeName(field))) {
+                                return field.get(null);
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
             return value;
         }
 
@@ -557,7 +555,23 @@ public final class Zson {
             if (obj == null) {
                 builder.append("null");
             } else {
-                writeString(builder, obj.toString());
+                if (token.getRawType().isEnum()) {
+                    builder.append('"');
+                    for (Field field : token.getRawType().getDeclaredFields()) {
+                        if (field.isEnumConstant()) {
+                            if (!field.isAccessible()) {
+                                field.setAccessible(true);
+                            }
+                            if (field.get(null) == obj) {
+                                builder.append(ReflectUtils.getSerializeName(field));
+                                break;
+                            }
+                        }
+                    }
+                    builder.append('"');
+                } else {
+                    writeString(builder, obj.toString());
+                }
             }
             builder.append(",");
         }

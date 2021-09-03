@@ -1,5 +1,3 @@
-package com.zpj.json.test;
-
 import java.util.ArrayList;
 import java.util.List;
 

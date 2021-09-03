@@ -1,5 +1,3 @@
-package com.zpj.json.test;
-
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,6 +20,9 @@ public class TestBean extends ParentBean<Integer> {
     Map<String, Boolean> map = new HashMap<>();
     Map<String, List<String>> map2 = new HashMap<>();
     Map<String, Map<String, List<String>>> map3 = new HashMap<>();
+
+    private TestEnum testEnum = TestEnum.ONE;
+    private final TestEnum2 testEnum2 = TestEnum2.FIVE;
 
     @Override
     public String toString() {
@@ -46,6 +47,8 @@ public class TestBean extends ParentBean<Integer> {
                 ", map=" + map +
                 ", map2=" + map2 +
                 ", map3=" + map3 +
+                ", testEnum=" + testEnum +
+                ", testEnum2=" + testEnum2 +
                 '}';
     }
 }

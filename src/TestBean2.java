@@ -1,5 +1,3 @@
-package com.zpj.json.test;
-
 public class TestBean2 {
 
     public int a = 100;
